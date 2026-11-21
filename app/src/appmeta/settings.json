@@ -1,0 +1,52 @@
+{
+  "format_version": 1,
+  "version": 4,
+  "fields": {
+    "host": {
+      "type": "string",
+      "label": "PC's IP Address",
+      "description": "Filled in automatically by the installer.",
+      "default": "",
+      "min_length": 0,
+      "max_length": 128
+    },
+    "scale": {
+      "type": "enum",
+      "label": "Dial scale",
+      "description": "Auto adjusts itself: it steps up as soon as the speed passes it.",
+      "default": "auto",
+      "options": [
+        { "value": "auto", "label": "Auto" },
+        { "value": "50", "label": "50 Mbit/s" },
+        { "value": "100", "label": "100 Mbit/s" },
+        { "value": "200", "label": "200 Mbit/s" },
+        { "value": "300", "label": "300 Mbit/s" },
+        { "value": "500", "label": "500 Mbit/s" },
+        { "value": "1000", "label": "1 Gbit/s" },
+        { "value": "2500", "label": "2.5 Gbit/s" },
+        { "value": "10000", "label": "10 Gbit/s" }
+      ]
+    },
+    "install": {
+      "type": "group",
+      "label": "Install",
+      "description": "FAQ: github.com/mrlunev/busybar-internet-speed",
+      "fields": {
+        "mac": {
+          "type": "string",
+          "label": "Install on Mac",
+          "description": "Paste into Terminal.",
+          "default": "curl -fsSL https://raw.githubusercontent.com/mrlunev/busybar-internet-speed/main/install.sh | bash",
+          "max_length": 255
+        },
+        "windows": {
+          "type": "string",
+          "label": "Install on Windows",
+          "description": "Paste into PowerShell.",
+          "default": "irm https://raw.githubusercontent.com/mrlunev/busybar-internet-speed/main/install.ps1 | iex",
+          "max_length": 255
+        }
+      }
+    }
+  }
+}
