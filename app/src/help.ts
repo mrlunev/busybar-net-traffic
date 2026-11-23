@@ -106,7 +106,7 @@ export function helpElements(state: Message, addresses: readonly WebAddress[]): 
     y += TAG_STEP;
   };
 
-  /** Open this in a browser, then Apps → Internet Speed, and follow the guide there. */
+  /** Open this in a browser, then Apps → Net Traffic, and follow the guide there. */
   const guide = () => {
     line("open", addresses.length > 0 ? "Open in a browser:" : "Plug in by USB, open:");
     const list = addresses.length > 0 ? addresses : [{ how: "USB", address: "10.0.4.20" } as const];
@@ -115,7 +115,7 @@ export function helpElements(state: Message, addresses: readonly WebAddress[]): 
     text("then", 0, y, "then", "normal", GREY);
     text("apps", THEN_ADVANCE, y, "Apps", "bold", WHITE);
     picture("arrow", arrowX, y + 3, ARROW, WHITE); // centred on the 7 px capitals
-    text("speed", arrowX + ARROW_W + SPACE, y, "Internet Speed", "bold", WHITE);
+    text("speed", arrowX + ARROW_W + SPACE, y, "Net Traffic", "bold", WHITE);
     y += LINE;
     line("follow", "and follow the guide there");
   };

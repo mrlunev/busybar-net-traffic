@@ -1,5 +1,5 @@
 """
-Bakes Internet Speed's screen (Figma "Apps for BUSY Bar Catalog", node 85:40269, drawn by render.py) into the app,
+Bakes Net Traffic's screen (Figma "Apps for BUSY Bar Catalog", node 85:40269, drawn by render.py) into the app,
 in layers from the back:
 
 - src/images/base.png: the panel alone and grey (under everything, for the moment before the first frame);

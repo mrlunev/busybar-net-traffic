@@ -1,5 +1,5 @@
 """
-The "Internet Speed" screen (Figma file "Apps for BUSY Bar Catalog", node 85:40269), drawn from its own geometry:
+The "Net Traffic" screen (Figma file "Apps for BUSY Bar Catalog", node 85:40269), drawn from its own geometry:
 the panel with its gradient and border, the labels, the gauge (the arc, its shadow, the needle) at any needle
 position and brightness, and the digits of the speeds. make-anim.py bakes it; check.py compares it with Figma's
 own render of the frame (tools/figma-85-40269.png).

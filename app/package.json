@@ -1,8 +1,8 @@
 {
-  "name": "internet-speed",
+  "name": "net-traffic",
   "private": true,
   "version": "0.1.0",
-  "description": "Your computer's internet speed, down and up, on the BUSY Bar's speedometer",
+  "description": "Your computer's live network traffic, down and up, on the BUSY Bar's speedometer",
   "author": "mrlunev",
   "type": "module",
   "scripts": {

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// Internet Speed's companion on the computer: measures this computer's internet traffic and gives it to the
+// Net Traffic's companion on the computer: measures this computer's internet traffic and gives it to the
 // BUSY Bar, which shows it on its speedometer. Node 20 or newer, no dependencies.
 //
-//   node speed-daemon.mjs              runs (the login item starts it like this)
-//   node speed-daemon.mjs setup        finds the bar on the USB cable, installs the app, pairs, starts at login
-//   node speed-daemon.mjs uninstall    stops it, removes the login item and the settings
+//   node traffic-meter.mjs              runs (the login item starts it like this)
+//   node traffic-meter.mjs setup        finds the bar on the USB cable, installs the app, pairs, starts at login
+//   node traffic-meter.mjs uninstall    stops it, removes the login item and the settings
 //
 // It reads the byte counters of the one network adapter that carries the internet: the default route with the
 // lowest metric (a VPN's tunnel, when it takes the default route, rather than the tunnel and the cable under it
@@ -32,7 +32,7 @@ import { hostsFor, USB_BAR } from "./hosts.mjs";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const VERSION = (() => {
   const hash = createHash("sha256");
-  for (const name of ["speed-daemon.mjs", "hosts.mjs", "bar-api.mjs", "config.mjs", "mdns.mjs", "setup.mjs"]) hash.update(readFileSync(path.join(HERE, name)));
+  for (const name of ["traffic-meter.mjs", "hosts.mjs", "bar-api.mjs", "config.mjs", "mdns.mjs", "setup.mjs"]) hash.update(readFileSync(path.join(HERE, name)));
   return hash.digest("hex").slice(0, 12);
 })();
 const args = process.argv.slice(2);
@@ -335,7 +335,7 @@ function serve() {
     log(err.code === "EADDRINUSE" ? `port ${PORT} is taken: the daemon already runs` : err.message);
     process.exit(1);
   });
-  server.listen(PORT, "0.0.0.0", () => log(`Internet Speed daemon ${VERSION} on port ${PORT}`));
+  server.listen(PORT, "0.0.0.0", () => log(`Net Traffic daemon ${VERSION} on port ${PORT}`));
 }
 
 // ---- entry ---------------------------------------------------------------------------------------------------------

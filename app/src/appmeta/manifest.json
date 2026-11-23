@@ -1,9 +1,9 @@
 {
   "format_version": 1,
-  "id": "app.mrlunev.internet_speed",
-  "name": "Internet Speed",
+  "id": "app.mrlunev.net_traffic",
+  "name": "Net Traffic",
   "version": "0.1.0",
   "api_version": "27.15.0",
-  "description": "Your computer's internet speed, down and up, on a speedometer",
+  "description": "Your computer's live network traffic, down and up, on a speedometer",
   "author": "mrlunev"
 }

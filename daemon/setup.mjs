@@ -1,4 +1,4 @@
-// Setup and uninstall for speed-daemon.mjs.
+// Setup and uninstall for traffic-meter.mjs.
 //
 // setup: finds the bar (over the USB cable, where its API is always open, or on Wi-Fi), adds the daemon to the
 // computer's login items and starts it, lets the bar through the Windows firewall, installs the prebuilt app on the
@@ -14,16 +14,16 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { appSettings, barInfo, installApp, launchApp, readText, setAppSettings, stopApp, writeText } from "./bar-api.mjs";
+import { appSettings, barInfo, installApp, launchApp, readText, removeApp, setAppSettings, stopApp, writeText } from "./bar-api.mjs";
 import { findBars } from "./mdns.mjs";
 import { APP_ID, CONFIG_DIR, hostOf, hostPatch, loadConfig, PORT, saveConfig } from "./config.mjs";
 import { hostsFor, USB_BAR, USB_COMPUTER } from "./hosts.mjs";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const DAEMON = path.join(HERE, "speed-daemon.mjs");
+const DAEMON = path.join(HERE, "traffic-meter.mjs");
 const BUNDLE = path.join(HERE, "..", "release", `${APP_ID}.tgz`);
-const FIREWALL_RULE = "BusyInternetSpeed";
+const FIREWALL_RULE = "BusyNetTraffic";
 const LOG = path.join(CONFIG_DIR, "daemon.log");
-const LABEL = "app.busy.internet-speed";
+const LABEL = "app.mrlunev.net-traffic";
 /**
  * The fingerprint of the package setup installed, kept next to the app on the bar. Installing an app replaces its
  * folder, so the file goes with any other copy: when it is there and matches, the bar has exactly this package.
@@ -54,9 +54,9 @@ async function stopDaemon() {
 
 // ---- login item -----------------------------------------------------------------------------------------------------
 
-const winDir = () => path.join(process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local"), "busy-internet-speed");
+const winDir = () => path.join(process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local"), "busy-net-traffic");
 const plist = () => path.join(os.homedir(), "Library", "LaunchAgents", `${LABEL}.plist`);
-const desktop = () => path.join(os.homedir(), ".config", "autostart", "busy-internet-speed.desktop");
+const desktop = () => path.join(os.homedir(), ".config", "autostart", "busy-net-traffic.desktop");
 
 function macPlist() {
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -91,7 +91,7 @@ function installLoginItem() {
     const starter = path.join(winDir(), "start.vbs");
     const quote = (s) => `""${s}""`;
     writeFileSync(starter, `Set sh = CreateObject("WScript.Shell")\r\nsh.Run "${quote(NODE)} ${quote(DAEMON)} --log ${quote(LOG)}", 0, False\r\n`);
-    spawnSync("reg", ["add", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", "/v", "BusyInternetSpeed", "/t", "REG_SZ", "/d", `wscript.exe "${starter}"`, "/f"], { stdio: "ignore" });
+    spawnSync("reg", ["add", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", "/v", "BusyNetTraffic", "/t", "REG_SZ", "/d", `wscript.exe "${starter}"`, "/f"], { stdio: "ignore" });
     // Started through WMI, so it belongs to no console's job and outlives the window setup runs in.
     const script = `$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = 'wscript.exe "${starter.replace(/'/g, "''")}"' }; exit $r.ReturnValue`;
     spawnSync("powershell", ["-NoProfile", "-NonInteractive", "-Command", script], { windowsHide: true });
@@ -103,14 +103,14 @@ function installLoginItem() {
     spawnSync("launchctl", ["bootstrap", `gui/${uid}`, plist()], { stdio: "ignore" });
   } else {
     mkdirSync(path.dirname(desktop()), { recursive: true });
-    writeFileSync(desktop(), `[Desktop Entry]\nType=Application\nName=BUSY Internet Speed\nExec="${NODE}" "${DAEMON}" --log "${LOG}"\nX-GNOME-Autostart-enabled=true\n`);
+    writeFileSync(desktop(), `[Desktop Entry]\nType=Application\nName=BUSY Net Traffic\nExec="${NODE}" "${DAEMON}" --log "${LOG}"\nX-GNOME-Autostart-enabled=true\n`);
     spawn(NODE, [DAEMON, "--log", LOG], { detached: true, stdio: "ignore" }).unref();
   }
 }
 
 function removeLoginItem() {
   if (process.platform === "win32") {
-    spawnSync("reg", ["delete", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", "/v", "BusyInternetSpeed", "/f"], { stdio: "ignore" });
+    spawnSync("reg", ["delete", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", "/v", "BusyNetTraffic", "/f"], { stdio: "ignore" });
     rmSync(winDir(), { recursive: true, force: true });
   } else if (process.platform === "darwin") {
     spawnSync("launchctl", ["bootout", `gui/${process.getuid()}`, plist()], { stdio: "ignore" });
@@ -118,6 +118,55 @@ function removeLoginItem() {
   } else {
     rmSync(desktop(), { force: true });
   }
+}
+
+// ---- the earlier name -----------------------------------------------------------------------------------------------
+
+/**
+ * Until 22.11.2026 the app was "Internet Speed", with other folders, login item, firewall rules and app id. Setup
+ * removes them, so two meters never fight over the port and the bar keeps one app.
+ */
+const EARLIER = {
+  appId: "app.mrlunev.internet_speed",
+  label: "app.busy.internet-speed",
+  run: "BusyInternetSpeed",
+  firewall: "BusyInternetSpeed",
+  folders: () => [
+    path.join(os.homedir(), ".busy-internet-speed"),
+    path.join(os.homedir(), ".config", "busy-internet-speed"),
+    path.join(process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local"), "busy-internet-speed"),
+  ],
+  plist: () => path.join(os.homedir(), "Library", "LaunchAgents", "app.busy.internet-speed.plist"),
+  desktop: () => path.join(os.homedir(), ".config", "autostart", "busy-internet-speed.desktop"),
+};
+
+/** Removes the earlier install from this computer. Returns whether there was one. */
+async function removeEarlierInstall() {
+  const runKey = ["HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", "/v", EARLIER.run];
+  const found =
+    EARLIER.folders().some((f) => existsSync(f)) ||
+    existsSync(EARLIER.plist()) ||
+    existsSync(EARLIER.desktop()) ||
+    (process.platform === "win32" && spawnSync("reg", ["query", ...runKey], { stdio: "ignore" }).status === 0);
+  if (!found) return false;
+  say("Removing the earlier version, Internet Speed, from this computer...");
+  if (process.platform === "win32") spawnSync("reg", ["delete", ...runKey, "/f"], { stdio: "ignore" });
+  if (process.platform === "darwin" && existsSync(EARLIER.plist())) {
+    // Unloading the LaunchAgent stops its daemon; KeepAlive would start it again after a plain quit.
+    spawnSync("launchctl", ["bootout", `gui/${process.getuid()}`, EARLIER.plist()], { stdio: "ignore" });
+  }
+  rmSync(EARLIER.plist(), { force: true });
+  rmSync(EARLIER.desktop(), { force: true });
+  // Whatever still listens on the port is the earlier meter (or this one, which setup starts again below).
+  await stopDaemon();
+  for (const folder of EARLIER.folders()) {
+    try {
+      rmSync(folder, { recursive: true, force: true });
+    } catch (err) {
+      say(`Could not remove ${folder} (${err.code}); delete it by hand.`);
+    }
+  }
+  return true;
 }
 
 // ---- the bar ------------------------------------------------------------------------------------------------------
@@ -151,7 +200,10 @@ function allowThroughFirewall() {
   say(`Windows will ask to let the bar reach this computer on port ${PORT}. Click Yes.`);
   const port = `netsh advfirewall firewall add rule name=${FIREWALL_RULE} dir=in action=allow protocol=TCP localport=${PORT} profile=any`;
   const node = `netsh advfirewall firewall add rule name=${FIREWALL_RULE}Node dir=in action=allow program="${process.execPath}" profile=any`;
-  const both = `/c ${port} & ${node}`.replace(/'/g, "''");
+  const earlier = spawnSync("netsh", ["advfirewall", "firewall", "show", "rule", `name=${EARLIER.firewall}`], { stdio: "ignore" }).status === 0
+    ? ` & netsh advfirewall firewall delete rule name=${EARLIER.firewall} & netsh advfirewall firewall delete rule name=${EARLIER.firewall}Node`
+    : "";
+  const both = `/c ${port} & ${node}${earlier}`.replace(/'/g, "''");
   spawnSync("powershell", ["-NoProfile", "-Command", `Start-Process cmd -Verb RunAs -Wait -WindowStyle Hidden -ArgumentList '${both}'`], { stdio: "inherit" });
   if (!ruleThere()) say("The firewall rule was not added (was the prompt declined?): the bar can reach this computer only once it is.");
 }
@@ -204,12 +256,13 @@ export async function setup({ version }) {
   saveConfig(config);
   allowThroughFirewall();
   allowThroughMacFirewall();
+  await removeEarlierInstall();
 
   let up = (await ping())?.version === version && loginItemCurrent();
   if (up) {
-    say("The speed meter on this computer is already this version and starts at login.");
+    say("The traffic meter on this computer is already this version and starts at login.");
   } else {
-    say("Starting the speed meter on this computer (it will start by itself at every login)...");
+    say("Starting the traffic meter on this computer (it will start by itself at every login)...");
     await stopDaemon();
     installLoginItem();
     for (let i = 0; i < 50 && !up; i += 1) {
@@ -218,7 +271,7 @@ export async function setup({ version }) {
     }
   }
   if (!up) {
-    say(`The speed meter did not start. Its log: ${LOG}`);
+    say(`The traffic meter did not start. Its log: ${LOG}`);
     return 1;
   }
 
@@ -226,6 +279,9 @@ export async function setup({ version }) {
     say(`The app bundle is missing: ${BUNDLE}`);
     return 1;
   }
+  // The bar deletes an app only when it is not running; setup quits the running app below anyway.
+  await stopApp(address, EARLIER.appId).catch(() => {});
+  if (await removeApp(address, EARLIER.appId).catch(() => false)) say("Removed the earlier version, Internet Speed, from the bar.");
   const fingerprint = createHash("sha256").update(readFileSync(BUNDLE)).digest("hex");
   if ((await readText(address, MARK))?.trim() === fingerprint) {
     say("The app on the bar is already this version.");
@@ -255,9 +311,9 @@ export async function setup({ version }) {
     await sleep(500);
     const seen = (await ping())?.seen ?? [];
     if (seen.some((a) => wanted.has(a))) {
-      say("Done: the bar shows this computer's internet speed.");
+      say("Done: the bar shows this computer's network traffic.");
       if (onWifi) say(`It works over Wi-Fi "${info.wifi.ssid}"; you can unplug the cable.`);
-      say("If this computer changes networks or addresses, the speed meter tells the bar by itself.");
+      say("If this computer changes networks or addresses, the traffic meter tells the bar by itself.");
       return 0;
     }
   }
@@ -271,7 +327,7 @@ export async function uninstall() {
   await stopDaemon();
   removeLoginItem();
   rmSync(CONFIG_DIR, { recursive: true, force: true });
-  say("The speed meter is stopped and will not start at login any more; its settings are removed.");
+  say("The traffic meter is stopped and will not start at login any more; its settings are removed.");
   if (process.platform === "win32") say(`The firewall rules ${FIREWALL_RULE} and ${FIREWALL_RULE}Node stay; remove them in Windows Defender Firewall if you like.`);
   say("Delete the app on the bar in the BUSY app.");
   return 0;

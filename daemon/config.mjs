@@ -1,4 +1,4 @@
-// What speed-daemon.mjs and setup.mjs share: the port, the app's id, and the settings kept between runs.
+// What traffic-meter.mjs and setup.mjs share: the port, the app's id, and the settings kept between runs.
 // paired: { id, name, serial, wifi (the bar's Wi-Fi address, or null), hosts (the list last written to the bar) }.
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -6,8 +6,8 @@ import os from "node:os";
 import path from "node:path";
 
 export const PORT = 8792;
-export const APP_ID = "app.mrlunev.internet_speed";
-export const CONFIG_DIR = path.join(os.homedir(), ".config", "busy-internet-speed");
+export const APP_ID = "app.mrlunev.net_traffic";
+export const CONFIG_DIR = path.join(os.homedir(), ".config", "busy-net-traffic");
 const CONFIG_PATH = path.join(CONFIG_DIR, "config.json");
 
 export function loadConfig() {

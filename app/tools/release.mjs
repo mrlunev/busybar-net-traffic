@@ -14,7 +14,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const APP = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const NAME = "app.mrlunev.internet_speed";
+const NAME = "app.mrlunev.net_traffic";
 const env = { ...process.env, COPYFILE_DISABLE: "1" };
 
 execSync("busy-cli build", { cwd: APP, stdio: "inherit", env });

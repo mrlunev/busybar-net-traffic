@@ -1,5 +1,5 @@
-// Internet Speed: the computer's traffic on the front display's speedometer (Figma "Apps for BUSY Bar Catalog",
-// node 85:40269). The companion on the computer (daemon/speed-daemon.mjs) answers GET /speed.
+// Net Traffic: the computer's traffic on the front display's speedometer (Figma "Apps for BUSY Bar Catalog",
+// node 85:40269). The companion on the computer (daemon/traffic-meter.mjs) answers GET /speed.
 // Everything that moves is baked into .anim files by tools/make-anim.py; a reading change is one small draw.
 
 import manifest from "./appmeta/manifest.json";

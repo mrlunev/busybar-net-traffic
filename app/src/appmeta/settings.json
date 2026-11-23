@@ -30,20 +30,20 @@
     "install": {
       "type": "group",
       "label": "Install",
-      "description": "FAQ: github.com/mrlunev/busybar-internet-speed",
+      "description": "FAQ: github.com/mrlunev/busybar-net-traffic",
       "fields": {
         "mac": {
           "type": "string",
           "label": "Install on Mac",
           "description": "Paste into Terminal.",
-          "default": "curl -fsSL https://raw.githubusercontent.com/mrlunev/busybar-internet-speed/main/install.sh | bash",
+          "default": "curl -fsSL https://raw.githubusercontent.com/mrlunev/busybar-net-traffic/main/install.sh | bash",
           "max_length": 255
         },
         "windows": {
           "type": "string",
           "label": "Install on Windows",
           "description": "Paste into PowerShell.",
-          "default": "irm https://raw.githubusercontent.com/mrlunev/busybar-internet-speed/main/install.ps1 | iex",
+          "default": "irm https://raw.githubusercontent.com/mrlunev/busybar-net-traffic/main/install.ps1 | iex",
           "max_length": 255
         }
       }

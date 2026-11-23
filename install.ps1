@@ -1,23 +1,23 @@
-# Internet Speed on the BUSY Bar: installs everything on Windows.
+# Net Traffic on the BUSY Bar: installs everything on Windows.
 #
-#   irm https://raw.githubusercontent.com/mrlunev/busybar-internet-speed/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/mrlunev/busybar-net-traffic/main/install.ps1 | iex
 #
 # 1. Node.js, if missing or older than 20 (winget, else the official installer; Windows asks to allow it).
-# 2. The speed meter, into %USERPROFILE%\.busy-internet-speed.
+# 2. The traffic meter, into %USERPROFILE%\.busy-net-traffic.
 # 3. Setup: finds the bar on the USB cable, opens port 8792 in the firewall (Windows asks to allow it), starts the
-#    speed meter and adds it to the login items, installs the app on the bar and pairs the two.
+#    traffic meter and adds it to the login items, installs the app on the bar and pairs the two.
 #
 # Works in Windows PowerShell 5.1, which every Windows 10 and 11 has. Everything sits in a function called on the
 # last line, so a half-downloaded script does nothing.
 
-function Install-BusyInternetSpeed {
+function Install-BusyNetTraffic {
   $ErrorActionPreference = 'Stop'
   # The progress bar makes Invoke-WebRequest many times slower in Windows PowerShell 5.1.
   $ProgressPreference = 'SilentlyContinue'
   # GitHub and nodejs.org take TLS 1.2 and newer; older Windows 10 builds do not offer it by default.
   [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
   # BUSYBAR_SOURCE: a local copy of the repository instead of GitHub, for testing before it is published.
-  $Repo = if ($env:BUSYBAR_SOURCE) { $env:BUSYBAR_SOURCE } else { 'mrlunev/busybar-internet-speed' }
+  $Repo = if ($env:BUSYBAR_SOURCE) { $env:BUSYBAR_SOURCE } else { 'mrlunev/busybar-net-traffic' }
   $NodeLine = 'latest-v24.x'
 
   function Say($text) { Write-Host ''; Write-Host $text -ForegroundColor Cyan }
@@ -54,24 +54,24 @@ function Install-BusyInternetSpeed {
   if (-not (Test-Node)) { Install-Node }
   if (-not (Test-Node)) { Fail 'Node.js 20 or newer is needed, and it is still missing. Install it from https://nodejs.org and run this again.' }
 
-  # A speed meter left running from an earlier install lets go of its files first.
+  # A traffic meter left running from an earlier install lets go of its files first.
   try { Invoke-WebRequest -UseBasicParsing -Method Post -TimeoutSec 2 'http://127.0.0.1:8792/quit' | Out-Null } catch { }
 
   if (Test-Path $Repo) {
     $dir = $Repo
   } else {
     Say 'Downloading...'
-    $dir = Join-Path $env:USERPROFILE '.busy-internet-speed'
-    $zip = Join-Path $env:TEMP 'busy-internet-speed.zip'
+    $dir = Join-Path $env:USERPROFILE '.busy-net-traffic'
+    $zip = Join-Path $env:TEMP 'busy-net-traffic.zip'
     Invoke-WebRequest -UseBasicParsing "https://codeload.github.com/$Repo/zip/main" -OutFile $zip
     if (Test-Path $dir) { Remove-Item $dir -Recurse -Force }
     Expand-Archive $zip -DestinationPath $dir
   }
-  $daemon = Get-ChildItem $dir -Recurse -Filter speed-daemon.mjs | Where-Object { $_.FullName -notmatch 'node_modules' } | Select-Object -First 1 | ForEach-Object FullName
-  if (-not $daemon) { Fail 'The download has no speed meter in it.' }
+  $daemon = Get-ChildItem $dir -Recurse -Filter traffic-meter.mjs | Where-Object { $_.FullName -notmatch 'node_modules' } | Select-Object -First 1 | ForEach-Object FullName
+  if (-not $daemon) { Fail 'The download has no traffic meter in it.' }
 
   Say 'Setting up the bar...'
   & node $daemon setup
 }
 
-try { Install-BusyInternetSpeed } catch { if ("$_" -ne 'busybar-setup-failed') { Write-Host "$_" -ForegroundColor Red } }
+try { Install-BusyNetTraffic } catch { if ("$_" -ne 'busybar-setup-failed') { Write-Host "$_" -ForegroundColor Red } }
