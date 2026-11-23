@@ -2,14 +2,15 @@
 
 ![Net Traffic on the BUSY Bar: the needle climbs from zero to 940 Mbit/s and drops back](media/demo.webp)
 
-Your computer's live internet traffic on the BUSY Bar: download on the needle, download and upload in numbers. It
+Your computer's live network traffic on the BUSY Bar: download on the needle, download and upload in numbers. It
 shows what the computer moves right now; it is not a speed test.
 
 You need: a BUSY Bar, a Mac or a Windows PC, and a USB cable.
 
 > [!NOTE]
-> **What the installer does.** Uses your Node.js 20+ if you have one. If not: on a Mac it puts a private copy from
-> nodejs.org into `~/.busy-net-traffic` (checksum verified, nothing else on the system changes); on Windows it
+> **What the installer does.** Uses your Node.js 20+ if you have one. If not, or on a Mac where it comes from a
+> version manager (nvm, fnm, Volta, asdf, n): on a Mac it puts a private copy from nodejs.org into
+> `~/.busy-net-traffic` (checksum verified, nothing else on the system changes); on Windows it
 > installs Node.js with winget or the official installer. Then it puts the traffic meter in `~/.busy-net-traffic`,
 > adds it to the login items (a LaunchAgent on macOS, the Run key on Windows; no administrator rights), and over the
 > USB cable puts the app on the bar and saves this computer's addresses in its settings. On Windows it also opens
@@ -88,9 +89,12 @@ rm -rf ~/.busy-net-traffic
 Windows, in PowerShell:
 
 ```
-node $HOME\.busy-net-traffic\daemon\traffic-meter.mjs uninstall
+node $HOME\.busy-net-traffic\busybar-net-traffic-main\daemon\traffic-meter.mjs uninstall
 Remove-Item -Recurse $HOME\.busy-net-traffic
 ```
+
+The firewall rules `BusyNetTraffic` and `BusyNetTrafficNode` stay; remove them in Windows Defender Firewall if you
+like.
 
 Then delete the app on the bar in the BUSY app.
 
